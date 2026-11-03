@@ -1,0 +1,8 @@
+// Copy this file to firebase-config.js and replace every placeholder with the Firebase Web app config.
+// Firebase client config is not a server secret; never put service-account keys here.
+export const firebaseConfig = {
+  apiKey: "YOUR_FIREBASE_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  appId: "YOUR_FIREBASE_APP_ID"
+};
