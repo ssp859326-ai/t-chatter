@@ -1,0 +1,11 @@
+{
+  "name": "T-chatter",
+  "short_name": "T-chatter",
+  "description": "Private conversations, made simple.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f7f6",
+  "theme_color": "#075e54",
+  "icons": []
+}
