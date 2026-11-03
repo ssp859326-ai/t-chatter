@@ -1,24 +1,24 @@
 # T-chatter
 
-A mobile-first chat UI prototype with original T-chatter branding.
+Mobile-first chat UI prototype and staged private messaging app.
 
-## Current status
-This repository currently contains a **front-end demo only**. Sample chats and message bubbles are local UI examples. It does not send messages, register phone numbers, deliver OTPs, save conversations, record voice notes, or connect voice/video calls.
+## Google sign-in setup
+1. Create a Firebase project and add a Web app.
+2. In Firebase Authentication, enable Google sign-in.
+3. Add the deployed Vercel domain under Authentication > Settings > Authorized domains.
+4. Copy `firebase-config.js.example` to `firebase-config.js`, then paste your Firebase Web app config.
+5. Deploy again.
 
-## Preview locally
-Open `index.html` in a browser, or deploy the repository as a static site.
+The Google sign-in page now uses Firebase's real Google popup flow when configured. It intentionally does not claim chat is live after authentication.
 
-## Planned production phases
-1. Phone-number registration with OTP using a trusted authentication/SMS provider.
-2. Real-time chat, media/voice-note upload and delivery.
-3. Voice/video calls using a WebRTC-compatible provider.
-4. Admin dashboard limited to OTP delivery status and aggregate service health.
+## Current state
+- UI prototype and installable PWA shell.
+- Firebase Google authentication integration scaffold.
+- Firestore rules starter denies all chat/message access until membership-based rules are implemented.
+- Chat, voice notes, calls, and admin health panel still require backend implementation.
 
 ## Privacy principles
 - Admins must not be able to read message content, voice notes, or call content.
 - OTP codes must never be logged or shown in the admin dashboard.
 - Use access controls, rate limits, secure transport, retention controls, and a documented privacy policy.
 - Do not claim end-to-end encryption until implemented and independently reviewed.
-
-## Brand
-T-chatter is an independent project and is not affiliated with WhatsApp.
