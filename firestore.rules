@@ -1,14 +1,41 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Starter rules: users can read/write only their own profile.
+    function signedIn() { return request.auth != null; }
+    function isMember(chatId) {
+      return signedIn() && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members;
+    }
     match /users/{userId} {
-      allow read, create, update: if request.auth != null && request.auth.uid == userId;
+      // Authenticated users can find registered peers by exact email; only owner can write their profile.
+      allow read: if signedIn();
+      allow create, update: if signedIn() && request.auth.uid == userId
+        && request.resource.data.uid == userId
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 320;
       allow delete: if false;
     }
-    // No chat/message access until membership-based rules are implemented and tested.
-    match /{document=**} {
-      allow read, write: if false;
+    match /chats/{chatId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.members;
+      allow create: if signedIn()
+        && request.auth.uid in request.resource.data.members
+        && request.resource.data.members is list
+        && request.resource.data.members.size() == 2
+        && request.resource.data.members[0] != request.resource.data.members[1];
+      allow update: if signedIn()
+        && request.auth.uid in resource.data.members
+        && request.resource.data.members == resource.data.members
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessage','updatedAt']);
+      allow delete: if false;
+      match /messages/{messageId} {
+        allow read: if isMember(chatId);
+        allow create: if isMember(chatId)
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 4000
+          && request.resource.data.keys().hasOnly(['senderId','text','createdAt']);
+        allow update, delete: if false;
+      }
     }
   }
 }
