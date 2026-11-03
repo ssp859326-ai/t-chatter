@@ -1,0 +1,6 @@
+// Supabase browser config: use the project URL and publishable key only.
+// Never put a service_role/secret key in browser code.
+export const supabaseConfig = {
+  url: "YOUR_SUPABASE_PROJECT_URL",
+  publishableKey: "YOUR_SUPABASE_PUBLISHABLE_KEY"
+};
