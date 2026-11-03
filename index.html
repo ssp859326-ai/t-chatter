@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#075e54"><meta name="description" content="T-chatter — private conversations, made simple.">
+<title>T-chatter</title><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app-shell">
+<header class="topbar"><div class="brand"><div class="brand-mark">T</div><div><strong>T-chatter</strong><small>Private conversations</small></div></div><div class="top-actions"><button aria-label="Search" id="searchBtn">⌕</button><button aria-label="More options" id="menuBtn">⋮</button></div></header>
+<nav class="tabs" aria-label="Main navigation"><button class="tab active" data-tab="chats">Chats <span class="count">3</span></button><button class="tab" data-tab="updates">Updates</button><button class="tab" data-tab="calls">Calls</button></nav>
+<main>
+<section class="list-view" id="listView">
+<div class="search-wrap"><span>⌕</span><input id="searchInput" placeholder="Search or start a new chat" aria-label="Search chats"></div>
+<div class="section-label" id="sectionLabel">MESSAGES · DEMO</div>
+<div id="chatList" class="chat-list"></div>
+<div class="demo-note">Demo preview · Messages aren't sent or stored.</div>
+</section>
+<section class="conversation hidden" id="conversation">
+<div class="conversation-head"><button class="back" id="backBtn" aria-label="Back">‹</button><div class="avatar" id="chatAvatar">A</div><div class="person"><strong id="chatName">Alex</strong><small>Demo conversation</small></div><button class="head-icon" aria-label="Voice call">☎</button><button class="head-icon" aria-label="Video call">▣</button></div>
+<div class="messages" id="messages"><div class="day-chip">TODAY</div><div class="bubble received">Hey! Welcome to T-chatter 👋<span>10:24</span></div><div class="bubble sent">Thanks! This is a UI preview.<span>10:25 ✓✓</span></div></div>
+<div class="composer"><button class="plus" aria-label="Add attachment">＋</button><input id="messageInput" placeholder="Message" aria-label="Message"><button class="emoji" aria-label="Emoji">☺</button><button class="send" id="sendBtn" aria-label="Send">➤</button></div>
+</section>
+</main>
+<button class="new-chat" id="newChat" aria-label="New chat">＋</button>
+<footer>Chats · Updates · Calls</footer>
+</div><script src="app.js"></script>
+</body></html>
