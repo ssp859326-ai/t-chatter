@@ -1,1 +1,37 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#075e54"><title>Privacy · T-chatter</title><style>*{box-sizing:border-box}body{margin:0;background:#f4f7f6;color:#172321;font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}.wrap{max-width:760px;margin:32px auto;background:white;padding:clamp(20px,5vw,48px);border-radius:20px}a{color:#075e54}.brand{font-weight:850;color:#075e54;font-size:22px}h1{font-size:30px}h2{font-size:19px;margin-top:28px}small{color:#71817b}</style></head><body><main class="wrap"><div class="brand">T-chatter</div><h1>Privacy notice</h1><small>Prototype notice · Last updated November 3, 2026</small><p>T-chatter is currently a user-interface prototype. This preview does not provide live accounts, send or store messages, upload media, or make calls.</p><h2>Account and sign-in</h2><p>Google sign-in is not yet connected. No Google account information is collected by this prototype. When authentication is added, the app will explain what profile data is processed and why.</p><h2>Messages and calls</h2><p>Live messaging, voice notes, and voice/video calling are not available yet. Do not use this prototype to share private or sensitive information.</p><h2>Administrator access</h2><p>The intended admin console is limited to authentication delivery/health status. Admins must not have access to OTP codes or private message and call content.</p><h2>Security and encryption</h2><p>Security controls and end-to-end encryption have not yet been implemented. T-chatter does not claim that this prototype is secure for private communication.</p><h2>Contact</h2><p>A contact channel for privacy requests will be published before production launch.</p><p><a href="index.html">Back to T-chatter</a></p></main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#075e54">
+<title>Privacy · T-chatter</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f7f6;color:#172321;font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:760px;margin:32px auto;background:white;padding:clamp(20px,5vw,48px);border-radius:20px}
+a{color:#075e54}.brand{font-weight:850;color:#075e54;font-size:22px}h1{font-size:30px}h2{font-size:19px;margin-top:28px}small{color:#71817b}
+</style>
+</head>
+<body>
+<main class="wrap">
+<div class="brand">T-chatter</div>
+<h1>Privacy notice</h1>
+<small>Messaging MVP · Last updated November 7, 2026</small>
+<p>T-chatter is an early-stage messaging MVP. Use it only with people you know. Do not share passwords, financial details, identity documents, or other highly sensitive information.</p>
+<h2>Account information</h2>
+<p>Google sign-in is handled by Supabase Auth when the Google provider has been configured. T-chatter stores the authenticated user's account ID, email address, display name, and profile image URL in its Supabase database to support account and chat features.</p>
+<h2>Messages</h2>
+<p>Messages you send are stored in the T-chatter Supabase database and are visible to members of that conversation. Chat access is controlled with database Row Level Security policies.</p>
+<h2>Email-based contact lookup</h2>
+<p>To start a one-to-one conversation, a signed-in user enters the other user's registered email address. Profile records are currently visible to signed-in T-chatter users to support this lookup. Use an email address you are comfortable sharing with other signed-in users.</p>
+<h2>Calls, media, and updates</h2>
+<p>Voice/video calls, voice notes, media uploads, and Updates/Stories are not available in this release.</p>
+<h2>Encryption and administrator access</h2>
+<p>Messages are protected by authenticated access policies, but end-to-end encryption has not been implemented or independently reviewed. Do not assume that messages are end-to-end encrypted. This MVP does not provide an admin dashboard for reading conversations.</p>
+<h2>Service providers</h2>
+<p>Supabase provides authentication, database, and realtime infrastructure. Google handles the Google sign-in flow.</p>
+<h2>Contact</h2>
+<p>A dedicated privacy contact channel will be added before a wider public launch.</p>
+<p><a href="index.html">Back to T-chatter</a></p>
+</main>
+</body>
+</html>
