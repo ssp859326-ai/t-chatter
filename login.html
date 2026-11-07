@@ -19,4 +19,18 @@ toggle.addEventListener("click",()=>setMode(mode==="signin"?"signup":"signin"));
 form.addEventListener("submit",async event=>{event.preventDefault();submit.disabled=true;status.textContent=mode==="signup"?"Creating account…":"Signing in…";try{const address=email.value.trim().toLowerCase();const result=mode==="signup"?await sb.auth.signUp({email:address,password:password.value,options:{emailRedirectTo:location.origin+"/index.html"}}):await sb.auth.signInWithPassword({email:address,password:password.value});if(result.error)throw result.error;if(mode==="signup"&&!result.data.session){status.textContent="Account created. Check your email to confirm, then return here and sign in.";return;}location.href="index.html";}catch(error){status.textContent=error.message||"Authentication failed.";}finally{submit.disabled=false;}});
 document.getElementById("forgotBtn").addEventListener("click",async()=>{const address=email.value.trim().toLowerCase();if(!address){status.textContent="Enter your email address first.";return;}status.textContent="Sending password reset email…";const {error}=await sb.auth.resetPasswordForEmail(address,{redirectTo:location.origin+"/login.html"});status.textContent=error?error.message:"If this email has an account, a password reset link has been sent.";});
 setMode("signin");
+sb.auth.onAuthStateChange((event) => {
+  if (event === "PASSWORD_RECOVERY") {
+    setTimeout(async () => {
+      const nextPassword = prompt("Enter your new password (at least 8 characters):");
+      if (!nextPassword || nextPassword.length < 8) {
+        status.textContent = "Password unchanged. Request another reset link if needed.";
+        return;
+      }
+      const { error } = await sb.auth.updateUser({ password: nextPassword });
+      status.textContent = error ? error.message : "Password updated. You can now sign in with your new password.";
+      if (!error) await sb.auth.signOut();
+    }, 0);
+  }
+});
 </script></body></html>
