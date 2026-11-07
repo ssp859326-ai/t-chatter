@@ -361,12 +361,5 @@ if (!configured) {
     queueMicrotask(() => void handleSession(session));
   });
 
-  sb.auth.getSession().then(({ data, error }) => {
-    if (error) {
-      notice("Session check failed: " + error.message);
-      return;
-    }
-    if (data.session) void handleSession(data.session);
-    else showSignedOut();
-  });
+  // Supabase emits INITIAL_SESSION after the auth listener is registered.
 }
