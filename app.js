@@ -13,6 +13,7 @@ let activeChat = null;
 let chatChannel = null;
 let messageChannel = null;
 let messageCache = [];
+let backupChats = [];
 
 const configured = Boolean(
   supabaseConfig?.url &&
@@ -46,7 +47,7 @@ function showSignedOut() {
   conversation.classList.add("hidden");
   listView.classList.remove("hidden");
   notice("PLEASE SIGN IN · PRIVATE CHATS");
-  list.innerHTML = '<div class="updates-card"><a href="login.html">Sign in with Google</a> to use T-chatter.</div>';
+  list.innerHTML = '<div class="updates-card"><a href="login.html">Sign in with email</a> to use T-chatter.</div>';
 }
 
 function drawMessages() {
@@ -100,7 +101,8 @@ async function renderChats() {
   const ids = (memberships || []).map(item => item.chat_id);
   list.replaceChildren();
 
-  if (!ids.length) {
+  for (const archived of backupChats) addChatRow(archived);
+  if (!ids.length && !backupChats.length) {
     list.innerHTML = '<div class="updates-card">No chats yet. Tap + to start a private conversation by email.</div>';
   } else {
     const { data: chats, error } = await sb
@@ -146,6 +148,15 @@ async function renderChats() {
 }
 
 async function openChat(chat) {
+  if (chat.isBackup) {
+    activeChat = chat; messageCache = chat.messages || [];
+    document.getElementById('chatName').textContent = chat.name + ' · Backup';
+    document.getElementById('chatAvatar').textContent = (chat.name || 'T').slice(0,1).toUpperCase();
+    listView.classList.add('hidden'); conversation.classList.remove('hidden');
+    document.querySelector('.composer').classList.add('hidden');
+    drawMessages(); notice('READ-ONLY BACKUP'); return;
+  }
+  document.querySelector('.composer').classList.remove('hidden');
   activeChat = chat;
   messageCache = [];
   document.getElementById("chatName").textContent = chat.name || "Chat";
@@ -270,7 +281,7 @@ async function sendMessage() {
   input.focus();
 }
 
-async function handleSession(session) {
+async function handleSession(session, eventName) {
   user = session?.user || null;
 
   if (!user) {
@@ -358,8 +369,51 @@ if (!configured) {
 
   sb.auth.onAuthStateChange((_event, session) => {
     // Keep database work outside the auth callback to avoid holding the auth lock.
-    queueMicrotask(() => void handleSession(session));
+    queueMicrotask(() => void handleSession(session, _event));
   });
 
   // Supabase emits INITIAL_SESSION after the auth listener is registered.
 }
+
+async function makeTChatterBackup() {
+  if (!user) return alert("Sign in first.");
+  const {data: ms, error:e1} = await sb.from("chat_members").select("chat_id").eq("user_id",user.id);
+  if(e1) return alert(e1.message);
+  const ids=[...new Set((ms||[]).map(x=>x.chat_id))];
+  if(!ids.length) return alert("No T-chatter chats to back up yet.");
+  const [c,m,p]=await Promise.all([
+    sb.from("chats").select("id,title,is_group,created_by,created_at").in("id",ids),
+    sb.from("chat_members").select("chat_id,user_id,role,joined_at").in("chat_id",ids),
+    sb.from("profiles").select("id,display_name,email,avatar_url")
+  ]);
+  if(c.error||m.error||p.error) return alert((c.error||m.error||p.error).message);
+  let msgs=[];
+  for(let n=0;;n+=1000){const q=await sb.from("messages").select("id,chat_id,sender_id,body,created_at").in("chat_id",ids).order("created_at").range(n,n+999);if(q.error)return alert(q.error.message);msgs=msgs.concat(q.data||[]);if(!q.data||q.data.length<1000)break;}
+  const backup={format:"t-chatter-backup",version:1,ownerId:user.id,exportedAt:new Date().toISOString(),chats:c.data,members:m.data,messages:msgs,profiles:p.data};
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="t-chatter-backup.json";a.click();URL.revokeObjectURL(url);
+  notice("BACKUP DOWNLOADED");
+}
+function restoreTChatterBackup(file) {
+  if(!file||!user)return;
+  const reader=new FileReader();
+  reader.onload=async()=>{
+    try{
+      const b=JSON.parse(String(reader.result||""));
+      if(b.format!=="t-chatter-backup"||b.version!==1||b.ownerId!==user.id||!Array.isArray(b.chats)||!Array.isArray(b.members)||!Array.isArray(b.messages)||!Array.isArray(b.profiles))throw new Error("Invalid backup or wrong T-chatter account.");
+      const profiles=new Map(b.profiles.map(x=>[x.id,x]));
+      backupChats=b.chats.filter(c=>b.members.some(m=>m.chat_id===c.id&&m.user_id===user.id)).map(c=>{
+        const other=b.members.find(m=>m.chat_id===c.id&&m.user_id!==user.id),p=other?profiles.get(other.user_id):null;
+        return {...c,name:c.title||p?.display_name||p?.email||"T-chatter chat",isBackup:true,messages:b.messages.filter(m=>m.chat_id===c.id)};
+      });
+      await renderChats();
+      notice("BACKUP RESTORED · READ-ONLY ARCHIVE");
+      alert("Backup restored as a read-only archive in this session. It does not overwrite live messages.");
+    }catch(e){alert(e.message||"Could not restore backup.");}
+  };
+  reader.readAsText(file);
+}
+document.getElementById("backupBtn").addEventListener("click",()=>void makeTChatterBackup());
+document.getElementById("restoreBtn").addEventListener("click",()=>document.getElementById("backupFileInput").click());
+document.getElementById("backupFileInput").addEventListener("change",e=>{restoreTChatterBackup(e.target.files?.[0]);e.target.value="";});
