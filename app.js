@@ -43,6 +43,7 @@ function clearChannels() {
 function showSignedOut() {
   activeChat = null;
   messageCache = [];
+  backupChats = [];
   clearChannels();
   conversation.classList.add("hidden");
   listView.classList.remove("hidden");
@@ -392,7 +393,7 @@ async function makeTChatterBackup() {
   const [c,m,p]=await Promise.all([
     sb.from("chats").select("id,title,is_group,created_by,created_at").in("id",ids),
     sb.from("chat_members").select("chat_id,user_id,role,joined_at").in("chat_id",ids),
-    sb.from("profiles").select("id,display_name,email,avatar_url")
+    sb.from("profiles").select("id,display_name,email,avatar_url").in("id",[...new Set((m.data||[]).map(x=>x.user_id))])
   ]);
   if(c.error||m.error||p.error) return alert((c.error||m.error||p.error).message);
   let msgs=[];
@@ -413,7 +414,7 @@ function restoreTChatterBackup(file) {
       const profiles=new Map(b.profiles.map(x=>[x.id,x]));
       backupChats=b.chats.filter(c=>b.members.some(m=>m.chat_id===c.id&&m.user_id===user.id)).map(c=>{
         const other=b.members.find(m=>m.chat_id===c.id&&m.user_id!==user.id),p=other?profiles.get(other.user_id):null;
-        return {...c,name:c.title||p?.display_name||p?.email||"T-chatter chat",isBackup:true,messages:b.messages.filter(m=>m.chat_id===c.id)};
+        const chatMessages=b.messages.filter(m=>m.chat_id===c.id);return {...c,name:c.title||p?.display_name||p?.email||"T-chatter chat",isBackup:true,messages:chatMessages,last_message:chatMessages.at(-1)?.body||"Saved backup",updated_at:chatMessages.at(-1)?.created_at||c.created_at};
       });
       await renderChats();
       notice("BACKUP RESTORED · READ-ONLY ARCHIVE");
