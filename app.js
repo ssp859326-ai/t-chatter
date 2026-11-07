@@ -14,6 +14,7 @@ let chatChannel = null;
 let messageChannel = null;
 let messageCache = [];
 let backupChats = [];
+let restorePromptedUserId = null;
 
 const configured = Boolean(
   supabaseConfig?.url &&
@@ -305,9 +306,8 @@ async function handleSession(session, eventName) {
 
   notice("PRIVATE CHATS · CONNECTED");
   await renderChats();
-  const restorePromptKey = "tchatter_restore_prompted_" + user.id;
-  if (!localStorage.getItem(restorePromptKey)) {
-    localStorage.setItem(restorePromptKey, "1");
+  if (restorePromptedUserId !== user.id) {
+    restorePromptedUserId = user.id;
     if (confirm("Welcome to T-chatter! Restore a T-chatter backup file now? Choose OK to select a file, or Cancel to skip.")) {
       document.getElementById("backupFileInput").click();
     }
