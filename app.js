@@ -395,15 +395,19 @@ async function makeTChatterBackup() {
   if(e1) return alert(e1.message);
   const ids=[...new Set((ms||[]).map(x=>x.chat_id))];
   if(!ids.length) return alert("No T-chatter chats to back up yet.");
-  const [c,m,p]=await Promise.all([
+  const [c,m]=await Promise.all([
     sb.from("chats").select("id,title,is_group,created_by,created_at").in("id",ids),
-    sb.from("chat_members").select("chat_id,user_id,role,joined_at").in("chat_id",ids),
-    sb.from("profiles").select("id,display_name,email,avatar_url").in("id",[...new Set((m.data||[]).map(x=>x.user_id))])
+    sb.from("chat_members").select("chat_id,user_id,role,joined_at").in("chat_id",ids)
   ]);
-  if(c.error||m.error||p.error) return alert((c.error||m.error||p.error).message);
+  if(c.error||m.error) return alert((c.error||m.error).message);
+  const memberIds=[...new Set((m.data||[]).map(x=>x.user_id))];
+  const {data:profiles,error:profileError}=memberIds.length
+    ? await sb.from("profiles").select("id,display_name,email,avatar_url").in("id",memberIds)
+    : {data:[],error:null};
+  if(profileError) return alert(profileError.message);
   let msgs=[];
   for(let n=0;;n+=1000){const q=await sb.from("messages").select("id,chat_id,sender_id,body,created_at").in("chat_id",ids).order("created_at").range(n,n+999);if(q.error)return alert(q.error.message);msgs=msgs.concat(q.data||[]);if(!q.data||q.data.length<1000)break;}
-  const backup={format:"t-chatter-backup",version:1,ownerId:user.id,exportedAt:new Date().toISOString(),chats:c.data,members:m.data,messages:msgs,profiles:p.data};
+  const backup={format:"t-chatter-backup",version:1,ownerId:user.id,exportedAt:new Date().toISOString(),chats:c.data,members:m.data,messages:msgs,profiles:profiles||[]};
   const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob),a=document.createElement("a");
   a.href=url;a.download="t-chatter-backup.json";a.click();URL.revokeObjectURL(url);
