@@ -305,13 +305,18 @@ async function handleSession(session, eventName) {
   }
 
   notice("PRIVATE CHATS · CONNECTED");
-  await renderChats();
   if (restorePromptedUserId !== user.id) {
     restorePromptedUserId = user.id;
-    if (confirm("Welcome to T-chatter! Restore a T-chatter backup file now? Choose OK to select a file, or Cancel to skip.")) {
+    const savedBackup = await loadLocalBackup(user.id).catch(() => null);
+    if (savedBackup && savedBackup.ownerId === user.id) {
+      if (confirm("A T-chatter backup is saved on this device. Restore it now? Choose Cancel to skip.")) {
+        backupChats = mapBackupChats(savedBackup);
+      }
+    } else if (confirm("Welcome to T-chatter! Restore a T-chatter backup file now? Choose OK to select a file, or Cancel to skip.")) {
       document.getElementById("backupFileInput").click();
     }
   }
+  await renderChats();
 }
 
 document.getElementById("backBtn").addEventListener("click", () => {
@@ -411,11 +416,8 @@ function restoreTChatterBackup(file) {
     try{
       const b=JSON.parse(String(reader.result||""));
       if(b.format!=="t-chatter-backup"||b.version!==1||b.ownerId!==user.id||!Array.isArray(b.chats)||!Array.isArray(b.members)||!Array.isArray(b.messages)||!Array.isArray(b.profiles))throw new Error("Invalid backup or wrong T-chatter account.");
-      const profiles=new Map(b.profiles.map(x=>[x.id,x]));
-      backupChats=b.chats.filter(c=>b.members.some(m=>m.chat_id===c.id&&m.user_id===user.id)).map(c=>{
-        const other=b.members.find(m=>m.chat_id===c.id&&m.user_id!==user.id),p=other?profiles.get(other.user_id):null;
-        const chatMessages=b.messages.filter(m=>m.chat_id===c.id);return {...c,name:c.title||p?.display_name||p?.email||"T-chatter chat",isBackup:true,messages:chatMessages,last_message:chatMessages.at(-1)?.body||"Saved backup",updated_at:chatMessages.at(-1)?.created_at||c.created_at};
-      });
+      backupChats=mapBackupChats(b);
+      await saveLocalBackup(user.id,b);
       await renderChats();
       notice("BACKUP RESTORED · READ-ONLY ARCHIVE");
       alert("Backup restored as a read-only archive in this session. It does not overwrite live messages.");
@@ -426,3 +428,41 @@ function restoreTChatterBackup(file) {
 document.getElementById("backupBtn").addEventListener("click",()=>void makeTChatterBackup());
 document.getElementById("restoreBtn").addEventListener("click",()=>document.getElementById("backupFileInput").click());
 document.getElementById("backupFileInput").addEventListener("change",e=>{restoreTChatterBackup(e.target.files?.[0]);e.target.value="";});
+
+function mapBackupChats(b) {
+  const profiles = new Map((b.profiles || []).map(x => [x.id, x]));
+  return (b.chats || []).filter(c => (b.members || []).some(m => m.chat_id === c.id && m.user_id === user.id)).map(c => {
+    const other = (b.members || []).find(m => m.chat_id === c.id && m.user_id !== user.id);
+    const profile = other ? profiles.get(other.user_id) : null;
+    const chatMessages = (b.messages || []).filter(m => m.chat_id === c.id);
+    return { ...c, name: c.title || profile?.display_name || profile?.email || "T-chatter chat", isBackup: true, messages: chatMessages, last_message: chatMessages.at(-1)?.body || "Saved backup", updated_at: chatMessages.at(-1)?.created_at || c.created_at };
+  });
+}
+function openBackupDatabase() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("t-chatter-backups", 1);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains("archives")) request.result.createObjectStore("archives");
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+async function saveLocalBackup(userId, backup) {
+  const db = await openBackupDatabase();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("archives", "readwrite");
+    tx.objectStore("archives").put(backup, userId);
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); reject(tx.error); };
+  });
+}
+async function loadLocalBackup(userId) {
+  const db = await openBackupDatabase();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("archives", "readonly");
+    const request = tx.objectStore("archives").get(userId);
+    request.onsuccess = () => { const result = request.result || null; db.close(); resolve(result); };
+    request.onerror = () => { db.close(); reject(request.error); };
+  });
+}
