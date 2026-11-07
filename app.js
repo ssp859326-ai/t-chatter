@@ -304,6 +304,13 @@ async function handleSession(session, eventName) {
 
   notice("PRIVATE CHATS · CONNECTED");
   await renderChats();
+  const restorePromptKey = "tchatter_restore_prompted_" + user.id;
+  if (!localStorage.getItem(restorePromptKey)) {
+    localStorage.setItem(restorePromptKey, "1");
+    if (confirm("Welcome to T-chatter! Restore a T-chatter backup file now? Choose OK to select a file, or Cancel to skip.")) {
+      document.getElementById("backupFileInput").click();
+    }
+  }
 }
 
 document.getElementById("backBtn").addEventListener("click", () => {
@@ -313,6 +320,7 @@ document.getElementById("backBtn").addEventListener("click", () => {
   messageCache = [];
   if (messageChannel) sb.removeChannel(messageChannel);
   messageChannel = null;
+  document.querySelector(".composer").classList.remove("hidden");
 });
 
 document.getElementById("sendBtn").addEventListener("click", () => void sendMessage());
