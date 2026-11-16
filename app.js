@@ -100,7 +100,7 @@ async function startChat(){
       if(chat){await openChat({...chat,name:other.username,recipientId:other.user_id});return;}
     }
   }
-  const {data:chat,error:createError}=await sb.from("chats").insert({created_by:user.id,title:null,is_group:false}).select("id,created_at").single();
+  const {data:chat,error:createError}=await sb.from("chats").insert({created_by:user.id,participant_id:other.user_id,title:null,is_group:false}).select("id,created_at").single();
   if(createError){alert(createError.message);return;}
   const {error:memberError}=await sb.from("chat_members").insert([{chat_id:chat.id,user_id:user.id,role:"member"},{chat_id:chat.id,user_id:other.user_id,role:"member"}]);
   if(memberError){alert(memberError.message);return;}
@@ -170,7 +170,7 @@ function setCallStatus(text){$("callStatus").textContent=text;}
 function showCall(video,label){$("callOverlay").classList.remove("hidden");$("callLabel").textContent=label;$("remoteVideo").classList.toggle("hidden",!video);$("localVideo").classList.toggle("hidden",!video);}
 async function sendSignal(kind,payload={},recipient=currentCall?.peerId,callId=currentCall?.id){
   if(!recipient||!callId)return;
-  const {error}=await sb.from("call_signals").insert({call_id:callId,sender_id:user.id,recipient_id:recipient,kind,payload});
+  const {error}=await sb.from("call_signals").insert({call_id:callId,sender_id:user.id,recipient_id:recipient,chat_id:currentCall.chatId,kind,payload});
   if(error)console.warn("Call signal:",error.message);
 }
 function makePeer(video){
@@ -187,7 +187,7 @@ async function startCall(video){
   if(!activeChat?.recipientId){alert("Open a chat with a T-Chatter contact first.");return;}
   if(!navigator.mediaDevices?.getUserMedia){alert("Calls need a secure HTTPS connection and browser microphone/camera permissions.");return;}
   try{
-    currentCall={id:crypto.randomUUID(),peerId:activeChat.recipientId,video};
+    currentCall={id:crypto.randomUUID(),peerId:activeChat.recipientId,chatId:activeChat.id,video};
     localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:!!video});
     $("localVideo").srcObject=video?localStream:null;showCall(video,video?"Video calling…":"Voice calling…");setCallStatus("Calling "+activeChat.name+"…");
     makePeer(video);
@@ -197,7 +197,7 @@ async function startCall(video){
 }
 async function acceptIncoming(row){
   const video=!!row.payload?.video;
-  currentCall={id:row.call_id,peerId:row.sender_id,video};
+  currentCall={id:row.call_id,peerId:row.sender_id,chatId:row.chat_id,video};
   try{
     localStream=await navigator.mediaDevices.getUserMedia({audio:true,video});
     $("localVideo").srcObject=video?localStream:null;showCall(video,video?"Incoming video call":"Incoming voice call");setCallStatus("Connecting…");
