@@ -231,7 +231,7 @@ async function finishCall(notify=true){
 }
 async function handleSession(session){
   user=session?.user||null;
-  if(!user){$("accountName").textContent="";$("chatList").innerHTML='<div class="updates-card"><a href="login.html">Sign in</a> to use T-Chatter.</div>';showView("chats");return;}
+  if(!user){clearChannel(chatChannel);clearChannel(messageChannel);clearChannel(signalChannel);chatChannel=messageChannel=signalChannel=null;$("newChat").classList.add("hidden");$("accountName").textContent="";$("chatList").innerHTML='<div class="updates-card"><a href="login.html">Sign in</a> to use T-Chatter.</div>';showView("chats");return;}
   const username=(user.user_metadata?.username||user.email?.split("@")[0]||"user").toLowerCase();
   $("accountName").textContent="@"+username;
   const {error:profileError}=await sb.from("profiles").upsert({id:user.id,email:null,display_name:username},{onConflict:"id"});
@@ -239,7 +239,7 @@ async function handleSession(session){
   const {error:userError}=await sb.from("usernames").upsert({user_id:user.id,username},{onConflict:"user_id"});
   if(userError)notice("Profile setup: "+userError.message);
   await renderChats();
-  signalChannel=sb.channel("call-signals-"+user.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"call_signals",filter:"recipient_id=eq."+user.id},payload=>void handleSignal(payload.new)).subscribe();
+  clearChannel(signalChannel);signalChannel=sb.channel("call-signals-"+user.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"call_signals",filter:"recipient_id=eq."+user.id},payload=>void handleSignal(payload.new)).subscribe();
   await loadStatuses();
 }
 document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{
@@ -257,6 +257,6 @@ $("backBtn").addEventListener("click",()=>{resetConversation();showView("chats")
 $("voiceCallBtn").addEventListener("click",()=>void startCall(false));
 $("videoCallBtn").addEventListener("click",()=>void startCall(true));
 $("endCallBtn").addEventListener("click",()=>void finishCall(true));
-$("menuBtn").addEventListener("click",async()=>{if(confirm("Sign out of T-Chatter?")){await sb.auth.signOut();location.href="login.html";}});
+$("menuBtn").addEventListener("click",async()=>{if(!user){location.href="login.html";return;}if(confirm("Sign out of T-Chatter?")){await sb.auth.signOut();location.href="login.html";}});
 $("searchInput").addEventListener("input",e=>{const q=e.target.value.toLowerCase();[...$("chatList").children].forEach(row=>row.style.display=row.textContent.toLowerCase().includes(q)?"":"none");});
 sb.auth.onAuthStateChange((_event,session)=>{queueMicrotask(()=>void handleSession(session));});
