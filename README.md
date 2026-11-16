@@ -1,37 +1,36 @@
-# T-chatter
+# T-Chatter
 
-T-chatter is a mobile-first, installable web chat MVP built with static HTML/CSS/JavaScript, Supabase Auth, Postgres, RLS, and Realtime.
+T-Chatter is a mobile-first messaging web app using Supabase Auth, Postgres, Realtime, private Storage, and browser WebRTC.
 
-## Available in this MVP
-- Email + password sign-up and sign-in through Supabase Auth.
-- Password reset email.
-- User profile creation after sign-in.
-- One-to-one chat creation by the other user's registered email address.
-- Private message storage in Supabase.
-- Realtime incoming message updates.
-- Downloadable T-chatter-only JSON chat backup.
-- Same-account backup import as a read-only archive, with a restore-or-skip prompt after login.
-- Responsive web app and PWA shell.
+## Features
+- Username + password account creation and sign-in; no phone number, OTP, or email address is entered by the user.
+- Unique usernames for finding other T-Chatter accounts.
+- One-to-one private chats and realtime text messages.
+- Voice notes recorded in the browser and stored in a private media bucket.
+- Status updates with text, photos, or videos; updates expire after 24 hours and are visible to chat contacts.
+- One-to-one voice and video calls using WebRTC, with microphone/camera permission prompts.
+- Responsive web app and installable PWA shell.
 
-## Backup and restore
-Use **Backup** while signed in to download a JSON archive of chats visible to your account. After login, choose a backup file or skip restoration. **Restore** validates that the file belongs to the same T-chatter account and displays its chats as a read-only archive on the current device. It does not overwrite live database messages or recreate messages attributed to other users. To restore on another device, securely transfer the backup file and select it there. Backup files contain private conversation contents; keep them secure.
+## Account model
+Supabase Auth's password provider requires an email or phone identity. T-Chatter creates an internal, non-routable email-shaped identifier from the username on the server, then uses Supabase's password authentication. Users only see and enter their username and password. No email address or phone number is collected for sign-in. Because there is no recovery contact, users must keep their password safe; password recovery is not currently available.
 
-## Not implemented yet
-- Group chats and group administration.
-- Voice notes, media uploads, and voice/video calls.
-- Updates/Stories.
-- End-to-end encryption.
-- Admin dashboard.
+The username-auth Edge Function uses the server-side Supabase service key to create confirmed auth accounts. That key is never included in browser code. The browser uses only the project URL and publishable key from supabase-config.js.
 
-Do not describe this MVP as end-to-end encrypted or as a replacement for a security-reviewed messenger.
+## Privacy and security
+- Public database tables have Row Level Security policies.
+- Chat messages and chat media are scoped to chat participants.
+- The media bucket is private; signed URLs are short-lived.
+- Usernames are discoverable by signed-in T-Chatter users so they can start chats.
+- Statuses are visible only to the owner and users who share a chat with them.
+- Call signaling is limited to members of the associated chat.
 
-## Supabase setup
-The browser uses only the project's URL and publishable key from `supabase-config.js`. Never place a Supabase secret/service-role key in browser code.
+T-Chatter is **not end-to-end encrypted** and should not be described as a security-reviewed replacement for a mature messenger. Supabase transport encryption and database access policies are not the same as end-to-end encryption.
 
-Email/password authentication is handled by Supabase Auth. Hosted Supabase projects may require email confirmation; configure this in Supabase Dashboard > Authentication > Sign In / Providers > Email. Password reset emails use the configured Auth email templates and redirect URL allowlist.
+## Calls
+Calls use browser WebRTC with public STUN servers. HTTPS, a supported browser, and microphone/camera permissions are required. Some network combinations may need a TURN relay service for reliable connectivity; no TURN service is configured in this version. Calls require both users to have T-Chatter open and online.
 
-## Database and privacy
-The public tables are protected by Row Level Security. Chat members can read messages in their chats; users can insert messages only as themselves. The profile lookup currently uses registered email addresses to start a conversation, so use an email you are comfortable sharing with other signed-in T-chatter users.
+## Database
+The database schema includes profiles, chats, chat_members, messages, usernames, statuses, and call_signals. Storage uses the private t-chatter-media bucket. Realtime is enabled for messages, statuses, and call signaling.
 
 ## Deploy
-The repository is connected to Vercel. Commits to `main` trigger production deployments.
+The repository is connected to Vercel. Commits to main trigger production deployments.
