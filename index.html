@@ -1,12 +1,23 @@
 <!doctype html>
-<html lang="en"><head>
+<html lang="en">
+<head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#075e54"><meta name="description" content="T-chatter — private conversations, made simple.">
-<title>T-chatter</title><link rel="stylesheet" href="styles.css"><link rel="manifest" href="manifest.webmanifest"></head>
+<meta name="theme-color" content="#075e54"><meta name="description" content="T-Chatter — private chats, voice notes, statuses and calls.">
+<title>T-Chatter</title><link rel="stylesheet" href="styles.css"><link rel="manifest" href="manifest.webmanifest">
+</head>
 <body><div class="app-shell">
-<header class="topbar"><div class="brand"><div class="brand-mark">T</div><div><strong>T-chatter</strong><small>Private conversations</small></div></div><div class="top-actions"><a href="login.html" style="color:white;text-decoration:none;font-size:12px;font-weight:700;padding:8px">Sign in</a><button id="backupBtn" aria-label="Back up chats" title="Back up chats" style="font-size:12px;width:auto;padding:0 8px">Backup</button><button id="restoreBtn" aria-label="Restore backup" title="Restore backup" style="font-size:12px;width:auto;padding:0 8px">Restore</button><button aria-label="Search" id="searchBtn">⌕</button><button aria-label="Account menu" id="menuBtn">⋮</button></div></header>
+<header class="topbar"><div class="brand"><div class="brand-mark">T</div><div><strong>T-Chatter</strong><small>Private conversations</small></div></div><div class="top-actions"><span id="accountName"></span><button id="menuBtn" aria-label="Account menu">⋮</button></div></header>
 <nav class="tabs" aria-label="Main navigation"><button class="tab active" data-tab="chats">Chats</button><button class="tab" data-tab="updates">Updates</button><button class="tab" data-tab="calls">Calls</button></nav>
-<main><section class="list-view" id="listView"><div class="search-wrap"><span>⌕</span><input id="searchInput" placeholder="Search chats" aria-label="Search chats"></div><div class="section-label" id="sectionLabel">PRIVATE CHATS</div><div id="chatList" class="chat-list"></div><div class="demo-note">Private messages are stored in your Supabase project.</div></section>
-<section class="conversation hidden" id="conversation"><div class="conversation-head"><button class="back" id="backBtn" aria-label="Back">‹</button><div class="avatar" id="chatAvatar">T</div><div class="person"><strong id="chatName">Chat</strong><small>Private chat</small></div><button class="head-icon" aria-label="Voice call" title="Coming soon">☎</button><button class="head-icon" aria-label="Video call" title="Coming soon">▣</button></div><div class="messages" id="messages"></div><div class="composer"><button class="plus" aria-label="Attachment" title="Coming soon">＋</button><input id="messageInput" placeholder="Message" aria-label="Message"><button class="emoji" aria-label="Emoji">☺</button><button class="send" id="sendBtn" aria-label="Send">➤</button></div></section></main>
-<button class="new-chat" id="newChat" aria-label="New chat" title="Start a chat">＋</button><footer>Chats · Updates · Calls · <a href="privacy.html" style="color:#075e54">Privacy</a></footer></div>
-<input type="file" id="backupFileInput" accept="application/json,.json" hidden><script type="module" src="app.js"></script><script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));}</script></body></html>
+<main>
+<section class="list-view" id="listView"><div class="search-wrap"><span>⌕</span><input id="searchInput" placeholder="Search chats" aria-label="Search chats"></div><div class="section-label" id="sectionLabel">PRIVATE CHATS</div><div id="chatList" class="chat-list"></div><div class="demo-note">Your conversations stay connected to your account.</div></section>
+<section class="updates-view hidden" id="updatesView"><div class="updates-header"><div><h2>Updates</h2><p>Share a moment that disappears after 24 hours.</p></div></div><div class="status-create"><input id="statusText" maxlength="240" placeholder="Write a status…"><label class="file-button">Photo / video<input id="statusFile" type="file" accept="image/*,video/mp4,video/webm" hidden></label><button id="postStatus" class="primary-btn">Share</button></div><div id="statusList" class="status-list"></div></section>
+<section class="calls-view hidden" id="callsView"><h2>Calls</h2><p>Start a voice or video call from any private chat.</p><div id="callsList" class="updates-card">Your recent calls will appear here.</div></section>
+<section class="conversation hidden" id="conversation"><div class="conversation-head"><button class="back" id="backBtn" aria-label="Back">‹</button><div class="avatar" id="chatAvatar">T</div><div class="person"><strong id="chatName">Chat</strong><small id="chatPresence">Private chat</small></div><button class="head-icon" id="voiceCallBtn" aria-label="Voice call" title="Voice call">☎</button><button class="head-icon" id="videoCallBtn" aria-label="Video call" title="Video call">▣</button></div><div class="messages" id="messages"></div><div class="composer" id="composer"><input id="messageInput" placeholder="Message" aria-label="Message"><button class="record" id="recordBtn" aria-label="Record voice message" title="Record voice message">🎙</button><button class="send" id="sendBtn" aria-label="Send">➤</button></div></section>
+</main>
+<button class="new-chat" id="newChat" aria-label="New chat" title="Start a chat">＋</button>
+<footer>Chats · Updates · Calls · <a href="privacy.html">Privacy</a></footer></div>
+<div class="call-overlay hidden" id="callOverlay"><div class="call-panel"><div class="call-top"><span id="callLabel">Calling…</span><button id="endCallBtn" class="end-call">End call</button></div><video id="remoteVideo" autoplay playsinline></video><video id="localVideo" autoplay muted playsinline></video><audio id="remoteAudio" autoplay></audio><p id="callStatus">Connecting securely…</p></div></div>
+<input type="file" id="backupFileInput" accept="application/json,.json" hidden>
+<script type="module" src="app.js"></script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));}</script>
+</body></html>
