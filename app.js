@@ -214,7 +214,7 @@ async function handleSignal(row){
     if(currentCall){await sendSignal("reject",{},row.sender_id,row.call_id);return;}
     const caller=(await sb.from("usernames").select("username").eq("user_id",row.sender_id).maybeSingle()).data?.username||"A contact";
     if(confirm(caller+" is calling you. Accept?"))await acceptIncoming(row);
-    else await sb.from("call_signals").insert({call_id:row.call_id,sender_id:user.id,recipient_id:row.sender_id,kind:"reject",payload:{}});
+    else await sb.from("call_signals").insert({call_id:row.call_id,chat_id:row.chat_id,sender_id:user.id,recipient_id:row.sender_id,kind:"reject",payload:{}});
     return;
   }
   if(!currentCall||row.call_id!==currentCall.id)return;
